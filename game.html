@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Quest: The Challenge Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin: 20px 0;
+            color: #4CAF50;
+        }
+
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px;
+        }
+
+        .card {
+            width: 80px;
+            height: 120px;
+            background-color: #fff;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 200px;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 1000;
+        }
+
+        .popup-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateY(0deg);
+            transition: transform 1s;
+        }
+
+        .popup-card.show-back {
+            transform: rotateY(180deg);
+        }
+
+        .popup-card .side {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .popup-card .front {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .popup-card .back {
+            background-color: #fff;
+            color: #333;
+            transform: rotateY(180deg);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .random-picker {
+            margin: 20px 0;
+        }
+
+        .random-picker button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .random-picker button:hover {
+            background-color: #45a049;
+        }
+
+        .popup-card .back .close-btn {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .popup-card .back .close-btn:hover {
+            background-color: #45a049;
+        }
+
+        .popup-card .back .task-desc {
+            font-style: italic;
+        }
+
+        .popup-card .back .task-title {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1> Vamsi- Card Quest Drinking game </h1>
+    <div class="card-container">
+        <div class="card" onclick="showTask('2')">2</div>
+        <div class="card" onclick="showTask('3')">3</div>
+        <div class="card" onclick="showTask('4')">4</div>
+        <div class="card" onclick="showTask('5')">5</div>
+        <div class="card" onclick="showTask('6')">6</div>
+        <div class="card" onclick="showTask('7')">7</div>
+        <div class="card" onclick="showTask('8')">8</div>
+        <div class="card" onclick="showTask('9')">9</div>
+        <div class="card" onclick="showTask('10')">10</div>
+        <div class="card" onclick="showTask('J')">J</div>
+        <div class="card" onclick="showTask('Q')">Q</div>
+        <div class="card" onclick="showTask('K')">K</div>
+        <div class="card" onclick="showTask('A')">A</div>
+		
+		
+    </div>
+
+    <div class="random-picker">
+        <button onclick="pickRandomCard()">Pick a Random Card</button>
+    </div>
+
+    <div id="overlay" onclick="closePopup()"></div>
+
+    <div id="popup">
+        <div class="popup-card" id="popup-card">
+            <div class="side front" id="popup-front"></div>
+            <div class="side back" id="popup-back">
+                <button class="close-btn" onclick="closePopup()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tasks = {
+            '2': 'Hostess card - Pick up to hostess name (up to four words). When someone calls you with this name, you should drink. Resets when others get the same card.',
+            '3': 'Items card - Take any environment, and let the others tell possible items in the environment. Failed player should drink . Eg: Environment: washroom, items: tap, towel',
+            '4': 'Nose card - Continue the game, other players should watch you carefully, once you touch your nose, others should also touch. Missing players should drink.',
+            '5': 'Camera card - Everyone freezes when cardholder asks. Last one should drink.',
+            '6': 'Tongue twister - Other players in a sequence should repeat it. Failed one should drink. Eg: One nice night nurse nurses nightly.',
+            '7': '7 card - Start with number 1, and clap when number has 7 or is multiple of 7. Failed one should drink',
+            '8': 'Bathroom card - Use it for washroom or donate it to one. No holdings for later use.',
+            '9': 'Self drink card - Drink yourself',
+            '10': 'Crazy person - Dont talk to him. Whoever talks to him should drink in the middle of the game.',
+            'J': 'Left player card - Person to the left should drink',
+            'Q': 'Right player card - Person to the right should drink',
+            'K': 'Task card - pick anyone and give any task to do with you. Failed one should drink. Eg: Rock paper scissors, arm wrestle, pushups',
+            'A': 'Any player card - Ask any player to drink.'
+        };
+
+        const cards = Object.keys(tasks);
+
+        function showTask(card) {
+            document.getElementById('popup-front').textContent = card;
+            document.getElementById('popup-back').innerHTML = `
+                <div class="task-title">${card}: ${tasks[card].split('-')[0]}</div>
+                <div class="task-desc">${tasks[card].substring(tasks[card].indexOf('-') + 1)}</div>
+            `;
+            const popupCard = document.getElementById('popup-card');
+            popupCard.classList.remove('show-back');
+            document.getElementById('popup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+            setTimeout(() => popupCard.classList.add('show-back'), 100);
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        function pickRandomCard() {
+            const randomCard = cards[Math.floor(Math.random() * cards.length)];
+            document.getElementById('popup-front').textContent = randomCard;
+            document.getElementById('popup-back').innerHTML = `
+                <div class="task-title">${randomCard}: ${tasks[randomCard].split('-')[0]}</div>
+                <div class="task-desc">${tasks[randomCard].substring(tasks[randomCard].indexOf('-') + 1)}</div>
+            `;
+            const popupCard = document.getElementById('popup-card');
+            popupCard.classList.remove('show-back');
+            document.getElementById('popup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+            setTimeout(() => popupCard.classList.add('show-back'), 100);
+        }
+    </script>
+</body>
+</html>
